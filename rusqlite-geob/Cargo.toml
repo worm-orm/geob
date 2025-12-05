@@ -1,0 +1,23 @@
+[package]
+name = "rusqlite-geob"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+default = ["proj", "index"]
+proj = ["geob/proj"]
+index = ["rstar"]
+
+[dependencies]
+geob = { path = "../geob", features = ["geo-traits", "sqlite", "rstar"] }
+rusqlite = { version = "0.37", features = ["functions", "vtab"] }
+
+geo-traits = { version = "0.3" }
+geo = { version = "0.31" }
+
+udled = { version = "0.6" }
+udled-tokenizers = { version = "0.5" }
+
+rstar = { version = "0.12", optional = true }
+
+bitflags = { version = "2" }

@@ -1,0 +1,112 @@
+use crate::{
+    GeoType, Geometry,
+    util::{get_endian, read_u32},
+    wkt,
+    writer::{BinaryWriter, ToBytes},
+};
+use alloc::{sync::Arc, vec::Vec};
+use core::fmt;
+
+use udled::{
+    Input,
+    bytes::{Endian, FromBytesExt},
+};
+
+#[derive(Clone)]
+pub struct Geob(Arc<[u8]>);
+
+impl fmt::Debug for Geob {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("GeomB").field(&self.geometry()).finish()
+    }
+}
+
+impl fmt::Display for Geob {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        wkt::display_geometry(self, f)
+    }
+}
+
+impl Geob {
+    pub fn new_point(srid: u32, x: f64, y: f64) -> Result<Geob, <Vec<u8> as BinaryWriter>::Error> {
+        let endian = Endian::native();
+        let mut output = Vec::new();
+        let bo = match endian {
+            Endian::Big => 0u8,
+            Endian::Lt => 1u8,
+        };
+
+        output.write_u8(bo)?;
+
+        srid.write(&mut output, endian)?;
+
+        GeoType::Point.write(&mut output, endian)?;
+
+        x.write(&mut output, endian)?;
+        y.write(&mut output, endian)?;
+
+        let geob = Geob::new(output);
+
+        Ok(geob)
+    }
+
+    pub fn from_text(input: &str) -> udled::Result<Geob> {
+        wkt::parse(input, Endian::native())
+    }
+
+    pub fn from_bytes<T: Into<Vec<u8>> + AsRef<[u8]>>(input: T) -> Option<Geob> {
+        if !Geometry::validate(input.as_ref()) {
+            None
+        } else {
+            Some(Geob::new(input.into()))
+        }
+    }
+
+    pub fn srid(&self) -> u32 {
+        let Some(endian) = get_endian(self.0[0]) else {
+            panic!("Could not get endian")
+        };
+
+        read_u32(&self.0[1..], endian)
+    }
+
+    pub fn kind(&self) -> GeoType {
+        let Some(endian) = get_endian(self.0[0]) else {
+            panic!("Could not get endian")
+        };
+
+        Input::new(&self.0[5..])
+            .parse(GeoType::byteorder(endian))
+            .unwrap()
+            .value
+    }
+
+    pub fn geometry(&self) -> Geometry<'_> {
+        Geometry::from_bytes(&self.0).unwrap()
+    }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+}
+
+impl AsRef<[u8]> for Geob {
+    fn as_ref(&self) -> &[u8] {
+        &self.0
+    }
+}
+
+impl Geob {
+    #[allow(unused)]
+    pub(crate) fn slice_mut(&mut self) -> &mut [u8] {
+        Arc::make_mut(&mut self.0)
+    }
+
+    pub(crate) fn slice(&self) -> &[u8] {
+        &self.0
+    }
+
+    pub(crate) fn new(bytes: Vec<u8>) -> Geob {
+        Geob(bytes.into())
+    }
+}
