@@ -5,8 +5,6 @@ edition = "2024"
 
 
 [features]
-# default = ["rstar"]
-default = ["proj", "geo-types"]
 geo-traits = ["dep:geo-traits"]
 proj = ["dep:proj"]
 sqlite = ["rusqlite"]

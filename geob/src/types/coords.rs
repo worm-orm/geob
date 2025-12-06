@@ -25,13 +25,6 @@ impl<'a> CoordRef<'a> {
     }
 }
 
-impl<'a> CoordRef<'a> {
-    #[inline]
-    pub(crate) const fn new(data: &'a [u8], endian: Endian) -> CoordRef<'a> {
-        CoordRef { data, endian }
-    }
-}
-
 impl<'a> PartialEq for CoordRef<'a> {
     fn eq(&self, other: &Self) -> bool {
         self.x() == other.x() && self.y() == other.y()
@@ -106,12 +99,6 @@ impl<'a> PartialEq for CoordSeqRef<'a> {
         }
 
         true
-    }
-}
-
-impl<'a> CoordSeqRef<'a> {
-    pub(crate) const fn new(data: &'a [u8], endian: Endian) -> CoordSeqRef<'a> {
-        CoordSeqRef { data, endian }
     }
 }
 
