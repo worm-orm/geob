@@ -1,9 +1,9 @@
 use rusqlite::{
     Result, ToSql,
-    types::{FromSql, FromSqlError, ValueRef},
+    types::{FromSql, FromSqlError, Value, ValueRef},
 };
 
-use crate::Geob;
+use crate::{Geob, types::GeobRef};
 
 impl ToSql for Geob {
     fn to_sql(&self) -> Result<rusqlite::types::ToSqlOutput<'_>> {
@@ -26,5 +26,23 @@ impl FromSql for Geob {
             }
             _ => Err(FromSqlError::InvalidType),
         }
+    }
+}
+
+impl From<Geob> for Value {
+    fn from(value: Geob) -> Self {
+        Value::Blob(value.as_ref().to_vec())
+    }
+}
+
+impl<'a> From<&'a Geob> for ValueRef<'a> {
+    fn from(value: &'a Geob) -> Self {
+        ValueRef::Blob(value.as_ref())
+    }
+}
+
+impl<'a> From<GeobRef<'a>> for ValueRef<'a> {
+    fn from(value: GeobRef<'a>) -> Self {
+        ValueRef::Blob(value.bytes)
     }
 }

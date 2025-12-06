@@ -5,6 +5,7 @@ edition = "2024"
 
 
 [features]
+default = ["sqlite"]
 geo-traits = ["dep:geo-traits"]
 proj = ["dep:proj"]
 sqlite = ["rusqlite"]
