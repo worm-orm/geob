@@ -24,5 +24,5 @@ pub use self::{
     // binary::GeoType,
     geob::Geob,
     srid::{EPSG, SRID},
-    types::GeoType,
+    types::{GeoType, GeobRef},
 };
