@@ -6,14 +6,14 @@ use udled::{
 };
 
 use crate::{
-    Coord, GeoType, Geob,
+    GeoType, Geob,
     util::{read_f64, read_u32, write_f64, write_u32},
 };
 
 impl Geob {
     pub fn project(&mut self, to: u32) {
         let proj = Proj::new_known_crs(
-            &format!("EPSG:{}", self.geometry().srid()),
+            &format!("EPSG:{}", self.srid()),
             &format!("EPSG:{}", to),
             None,
         )
@@ -48,7 +48,7 @@ impl proj::Coord<f64> for ProjCoord {
 }
 
 fn project(proj: &Proj, geo: &mut Geob, to: u32) {
-    let endian = geo.geometry().endian();
+    let endian = geo.endian();
     let output = geo.slice_mut();
 
     write_u32(&mut output[1..], to, endian);
@@ -89,11 +89,11 @@ pub fn project_line_string(proj: &Proj, buf: &mut [u8], endian: Endian) -> usize
     let offset = 4;
 
     for i in 0..num {
-        let offset = offset + (i * Coord::SIZE);
-        project_coords(proj, &mut buf[offset..(offset + Coord::SIZE)], endian);
+        let offset = offset + (i * 16);
+        project_coords(proj, &mut buf[offset..(offset + 16)], endian);
     }
 
-    offset + num * Coord::SIZE
+    offset + num * 16
 }
 
 fn project_polygon(proj: &Proj, buf: &mut [u8], endian: Endian) -> usize {

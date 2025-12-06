@@ -1,43 +1,27 @@
-use udled::{
-    TokenizerExt,
-    bytes::{Endian, FromBytes, FromBytesExt},
-};
+use alloc::fmt;
+use udled::bytes::{FromBytes, FromBytesExt};
 
-use crate::{
-    GeoType,
-    types::coords::{CoordSegSegSegRef, MultiCoordSeqRef},
-    util::read_u32,
-};
+use crate::types::coords::{CoordSegSegSegRef, MultiCoordSeqRef};
 
-#[derive(Clone, Copy)]
-pub struct MultiPolygonRef<'a> {
-    bytes: &'a [u8],
-    endian: Endian,
-}
+#[derive(Clone, Copy, PartialEq)]
+#[repr(transparent)]
+pub struct MultiPolygonRef<'a>(CoordSegSegSegRef<'a>);
 
 impl<'a> MultiPolygonRef<'a> {
     pub fn len(&self) -> usize {
-        read_u32(&self.bytes[1..], self.endian) as _
+        self.0.len()
     }
 
     pub fn get(&self, idx: usize) -> Option<MultiCoordSeqRef<'a>> {
-        CoordSegSegSegRef::new(&self.bytes[1..], self.endian).get(idx)
+        self.0.get(idx)
     }
 }
 
-struct MultiPolygonType;
-
-impl<'input> FromBytes<'input, &'input [u8]> for MultiPolygonType {
-    fn parse(
-        reader: &mut udled::Reader<'_, 'input, &'input [u8]>,
-        byteorder: Endian,
-    ) -> udled::Result<Self> {
-        let ty = reader.parse(GeoType::byteorder(byteorder))?;
-        if ty.value != GeoType::MultiPolygon {
-            return Err(reader.error("Expected a Multipolygon"))?;
-        }
-
-        Ok(Self)
+impl<'a> fmt::Debug for MultiPolygonRef<'a> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("MultiPolygonRef")
+            .field("lines", &self.0)
+            .finish()
     }
 }
 
@@ -46,17 +30,8 @@ impl<'input> FromBytes<'input, &'input [u8]> for MultiPolygonRef<'input> {
         reader: &mut udled::Reader<'_, 'input, &'input [u8]>,
         byteorder: udled::bytes::Endian,
     ) -> udled::Result<Self> {
-        let bytes = reader.parse(
-            (
-                MultiPolygonType::byteorder(byteorder),
-                CoordSegSegSegRef::byteorder(byteorder),
-            )
-                .slice(),
-        )?;
+        let bytes = reader.parse(CoordSegSegSegRef::byteorder(byteorder))?;
 
-        Ok(Self {
-            bytes: bytes.value,
-            endian: byteorder,
-        })
+        Ok(Self(bytes.value))
     }
 }

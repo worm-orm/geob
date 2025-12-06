@@ -5,7 +5,7 @@ use geo::{
     Intersects, Within,
 };
 use geo_traits::to_geo::{ToGeoGeometry, ToGeoPoint};
-use geob::{GeoKind, GeoType, Geob};
+use geob::{GeoType, Geob, types::GeometryRef};
 use rusqlite::{Connection, Error, Result, functions::FunctionFlags};
 
 use crate::template::{Lookup, replace};
@@ -96,8 +96,8 @@ pub fn register_functions(conn: &Connection) -> Result<bool> {
             let a = a.geometry();
             let b = b.geometry();
 
-            let distance = match (a.kind(), b.kind()) {
-                (GeoKind::Point(a), GeoKind::Point(b)) => {
+            let distance = match (a, b) {
+                (GeometryRef::Point(a), GeometryRef::Point(b)) => {
                     let a = a.to_point();
                     let b = b.to_point();
 

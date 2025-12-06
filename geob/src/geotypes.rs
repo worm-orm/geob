@@ -1,18 +1,16 @@
-use crate::binary::{
-    GeoKind, GeoType, GeometryCollection, LineString, MultiLineString, MultiPoint, MultiPolygon,
-    Point, Polygon,
-};
 use crate::{
-    Coord,
+    GeoType, Geob,
+    types::{
+        CollectionRef, CoordRef, GeometryRef, LineStringRef, MultiLineStringRef, MultiPointRef,
+        MultiPolygonRef, PointRef, PolygonRef,
+    },
     writer::{BinaryWriter, ToBytes},
 };
-use crate::{Geob, Geometry};
 use alloc::vec::Vec;
-use geo_traits::to_geo::{ToGeoPolygon, ToGeoRect};
 use geo_traits::{
     CoordTrait, GeometryCollectionTrait, LineStringTrait, MultiLineStringTrait, MultiPointTrait,
     MultiPolygonTrait, PointTrait, PolygonTrait, UnimplementedLine, UnimplementedRect,
-    UnimplementedTriangle,
+    UnimplementedTriangle, to_geo::ToGeoRect,
 };
 use udled::bytes::Endian;
 
@@ -145,7 +143,7 @@ fn process_inner<T: geo_traits::GeometryTrait<T = f64>, W: BinaryWriter>(
     Ok(())
 }
 
-impl<'input> CoordTrait for Coord<'input> {
+impl<'input> CoordTrait for CoordRef<'input> {
     type T = f64;
 
     fn dim(&self) -> geo_traits::Dimensions {
@@ -175,37 +173,37 @@ macro_rules! geo {
             type T = f64;
 
             type PointType<'a>
-                = Point<'a>
+                = PointRef<'a>
             where
                 Self: 'a;
 
             type LineStringType<'a>
-                = LineString<'a>
+                = LineStringRef<'a>
             where
                 Self: 'a;
 
             type PolygonType<'a>
-                = Polygon<'a>
+                = PolygonRef<'a>
             where
                 Self: 'a;
 
             type MultiPointType<'a>
-                = MultiPoint<'a>
+                = MultiPointRef<'a>
             where
                 Self: 'a;
 
             type MultiLineStringType<'a>
-                = MultiLineString<'a>
+                = MultiLineStringRef<'a>
             where
                 Self: 'a;
 
             type MultiPolygonType<'a>
-                = MultiPolygon<'a>
+                = MultiPolygonRef<'a>
             where
                 Self: 'a;
 
             type GeometryCollectionType<'a>
-                = GeometryCollection<'a>
+                = CollectionRef<'a>
             where
                 Self: 'a;
 
@@ -249,9 +247,9 @@ macro_rules! geo {
     };
 }
 
-impl<'input> geo_traits::PointTrait for Point<'input> {
+impl<'input> geo_traits::PointTrait for PointRef<'input> {
     type CoordType<'a>
-        = Coord<'a>
+        = CoordRef<'a>
     where
         Self: 'a;
 
@@ -260,11 +258,11 @@ impl<'input> geo_traits::PointTrait for Point<'input> {
     }
 }
 
-geo!(Point => Point);
+geo!(PointRef => Point);
 
-impl<'input> geo_traits::LineStringTrait for LineString<'input> {
+impl<'input> geo_traits::LineStringTrait for LineStringRef<'input> {
     type CoordType<'a>
-        = Coord<'a>
+        = CoordRef<'a>
     where
         Self: 'a;
 
@@ -277,16 +275,16 @@ impl<'input> geo_traits::LineStringTrait for LineString<'input> {
     }
 }
 
-geo!(LineString => LineString);
+geo!(LineStringRef => LineString);
 
-impl<'input> geo_traits::PolygonTrait for Polygon<'input> {
+impl<'input> geo_traits::PolygonTrait for PolygonRef<'input> {
     type RingType<'a>
-        = LineString<'a>
+        = LineStringRef<'a>
     where
         Self: 'a;
 
     fn exterior(&self) -> Option<Self::RingType<'_>> {
-        self.get(0).copied()
+        self.get(0).map(LineStringRef)
     }
 
     fn num_interiors(&self) -> usize {
@@ -295,15 +293,15 @@ impl<'input> geo_traits::PolygonTrait for Polygon<'input> {
     }
 
     unsafe fn interior_unchecked(&self, i: usize) -> Self::RingType<'_> {
-        self.get(i + 1).copied().unwrap()
+        self.get(i + 1).map(LineStringRef).unwrap()
     }
 }
 
-geo!(Polygon => Polygon);
+geo!(PolygonRef => Polygon);
 
-impl<'input> geo_traits::MultiPolygonTrait for MultiPolygon<'input> {
+impl<'input> geo_traits::MultiPolygonTrait for MultiPolygonRef<'input> {
     type InnerPolygonType<'a>
-        = Polygon<'input>
+        = PolygonRef<'input>
     where
         Self: 'a;
 
@@ -312,15 +310,15 @@ impl<'input> geo_traits::MultiPolygonTrait for MultiPolygon<'input> {
     }
 
     unsafe fn polygon_unchecked(&self, i: usize) -> Self::InnerPolygonType<'_> {
-        self.get(i).cloned().unwrap()
+        self.get(i).map(PolygonRef).unwrap()
     }
 }
 
-geo!(MultiPolygon => MultiPolygon);
+geo!(MultiPolygonRef => MultiPolygon);
 
-impl<'input> geo_traits::MultiPointTrait for MultiPoint<'input> {
+impl<'input> geo_traits::MultiPointTrait for MultiPointRef<'input> {
     type InnerPointType<'a>
-        = Point<'a>
+        = PointRef<'a>
     where
         Self: 'a;
 
@@ -329,13 +327,15 @@ impl<'input> geo_traits::MultiPointTrait for MultiPoint<'input> {
     }
 
     unsafe fn point_unchecked(&self, i: usize) -> Self::InnerPointType<'_> {
-        Point(self.get(i).unwrap())
+        self.get(i).map(PointRef).unwrap()
     }
 }
 
-impl<'input> geo_traits::MultiLineStringTrait for MultiLineString<'input> {
+geo!(MultiPointRef => MultiPoint);
+
+impl<'input> geo_traits::MultiLineStringTrait for MultiLineStringRef<'input> {
     type InnerLineStringType<'a>
-        = LineString<'a>
+        = LineStringRef<'a>
     where
         Self: 'a;
 
@@ -344,13 +344,15 @@ impl<'input> geo_traits::MultiLineStringTrait for MultiLineString<'input> {
     }
 
     unsafe fn line_string_unchecked(&self, i: usize) -> Self::InnerLineStringType<'_> {
-        self.get(i).copied().unwrap()
+        self.get(i).map(LineStringRef).unwrap()
     }
 }
 
-impl<'input> geo_traits::GeometryCollectionTrait for GeometryCollection<'input> {
+geo!(MultiLineStringRef => MultiLineString);
+
+impl<'input> geo_traits::GeometryCollectionTrait for CollectionRef<'input> {
     type GeometryType<'a>
-        = GeoKind<'a>
+        = GeometryRef<'a>
     where
         Self: 'a;
 
@@ -359,47 +361,47 @@ impl<'input> geo_traits::GeometryCollectionTrait for GeometryCollection<'input> 
     }
 
     unsafe fn geometry_unchecked(&self, i: usize) -> Self::GeometryType<'_> {
-        self.get(i).cloned().unwrap()
+        self.get(i).unwrap()
     }
 }
 
-geo!(GeometryCollection => GeometryCollection);
+geo!(CollectionRef => GeometryCollection);
 
-impl<'input> geo_traits::GeometryTrait for GeoKind<'input> {
+impl<'input> geo_traits::GeometryTrait for GeometryRef<'input> {
     type T = f64;
 
     type PointType<'a>
-        = Point<'a>
+        = PointRef<'a>
     where
         Self: 'a;
 
     type LineStringType<'a>
-        = LineString<'a>
+        = LineStringRef<'a>
     where
         Self: 'a;
 
     type PolygonType<'a>
-        = Polygon<'a>
+        = PolygonRef<'a>
     where
         Self: 'a;
 
     type MultiPointType<'a>
-        = MultiPoint<'a>
+        = MultiPointRef<'a>
     where
         Self: 'a;
 
     type MultiLineStringType<'a>
-        = MultiLineString<'a>
+        = MultiLineStringRef<'a>
     where
         Self: 'a;
 
     type MultiPolygonType<'a>
-        = MultiPolygon<'a>
+        = MultiPolygonRef<'a>
     where
         Self: 'a;
 
     type GeometryCollectionType<'a>
-        = GeometryCollection<'a>
+        = CollectionRef<'a>
     where
         Self: 'a;
 
@@ -438,89 +440,13 @@ impl<'input> geo_traits::GeometryTrait for GeoKind<'input> {
         Self::LineType<'_>,
     > {
         match self {
-            GeoKind::Point(p) => geo_traits::GeometryType::Point(p),
-            GeoKind::Path(ls) => geo_traits::GeometryType::LineString(ls),
-            GeoKind::Polygon(poly) => geo_traits::GeometryType::Polygon(poly),
-            GeoKind::MultiPoint(mp) => geo_traits::GeometryType::MultiPoint(mp),
-            GeoKind::MultiLineString(mls) => geo_traits::GeometryType::MultiLineString(mls),
-            GeoKind::MultiPolygon(mpoly) => geo_traits::GeometryType::MultiPolygon(mpoly),
-            GeoKind::Collection(gc) => geo_traits::GeometryType::GeometryCollection(gc),
+            GeometryRef::Point(p) => geo_traits::GeometryType::Point(p),
+            GeometryRef::LineString(ls) => geo_traits::GeometryType::LineString(ls),
+            GeometryRef::Polygon(poly) => geo_traits::GeometryType::Polygon(poly),
+            GeometryRef::MultiPoint(mp) => geo_traits::GeometryType::MultiPoint(mp),
+            GeometryRef::MultiLineString(mls) => geo_traits::GeometryType::MultiLineString(mls),
+            GeometryRef::MultiPolygon(mpoly) => geo_traits::GeometryType::MultiPolygon(mpoly),
+            GeometryRef::Collection(gc) => geo_traits::GeometryType::GeometryCollection(gc),
         }
-    }
-}
-
-impl<'input> geo_traits::GeometryTrait for Geometry<'input> {
-    type T = f64;
-
-    type PointType<'a>
-        = Point<'a>
-    where
-        Self: 'a;
-
-    type LineStringType<'a>
-        = LineString<'a>
-    where
-        Self: 'a;
-
-    type PolygonType<'a>
-        = Polygon<'a>
-    where
-        Self: 'a;
-
-    type MultiPointType<'a>
-        = MultiPoint<'a>
-    where
-        Self: 'a;
-
-    type MultiLineStringType<'a>
-        = MultiLineString<'a>
-    where
-        Self: 'a;
-
-    type MultiPolygonType<'a>
-        = MultiPolygon<'a>
-    where
-        Self: 'a;
-
-    type GeometryCollectionType<'a>
-        = GeometryCollection<'a>
-    where
-        Self: 'a;
-
-    type RectType<'a>
-        = UnimplementedRect<Self::T>
-    where
-        Self: 'a;
-
-    type TriangleType<'a>
-        = UnimplementedTriangle<Self::T>
-    where
-        Self: 'a;
-
-    type LineType<'a>
-        = UnimplementedLine<Self::T>
-    where
-        Self: 'a;
-
-    fn dim(&self) -> geo_traits::Dimensions {
-        geo_traits::Dimensions::Xy
-    }
-
-    fn as_type(
-        &self,
-    ) -> geo_traits::GeometryType<
-        '_,
-        Self::PointType<'_>,
-        Self::LineStringType<'_>,
-        Self::PolygonType<'_>,
-        Self::MultiPointType<'_>,
-        Self::MultiLineStringType<'_>,
-        Self::MultiPolygonType<'_>,
-        Self::GeometryCollectionType<'_>,
-        Self::RectType<'_>,
-        Self::TriangleType<'_>,
-        Self::LineType<'_>,
-    > {
-        self.kind().as_type()
     }
 }

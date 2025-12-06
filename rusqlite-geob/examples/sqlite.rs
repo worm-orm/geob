@@ -29,7 +29,7 @@ fn main() -> rusqlite::Result<()> {
     db.execute("INSERT INTO test VALUES (?, ?)", (&lygten, "Lygten"))?;
 
     let mut stmt =
-        db.prepare("SELECT name, point, St_Distance(point, $1) / 1000 FROM test WHERE rowid in (SELECT id FROM test_index where distance < 5000 and geometry = $1) and name is not 'Lygten'")?;
+        db.prepare("SELECT name, point, St_Distance(point, $1) / 1000 FROM test WHERE rowid in (SELECT id FROM test_index where distance < 3000 and geometry = $1) and name is not 'Lygten'")?;
 
     let mut rows = stmt.query((&lygten,))?;
 

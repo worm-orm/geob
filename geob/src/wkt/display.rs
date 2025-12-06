@@ -8,7 +8,7 @@ use udled::{
 type FmtResult = Result<usize, fmt::Error>;
 
 use crate::{
-    Coord, GeoType, Geob,
+    GeoType, Geob,
     util::{read_f64, read_u32},
 };
 
@@ -99,11 +99,11 @@ pub fn display_line_string(buf: &[u8], endian: Endian, f: &mut fmt::Formatter) -
         if i > 0 {
             write!(f, ", ")?;
         }
-        let offset = offset + (i * Coord::SIZE);
-        display_coords(&buf[offset..(offset + Coord::SIZE)], endian, f)?;
+        let offset = offset + (i * 16);
+        display_coords(&buf[offset..(offset + 16)], endian, f)?;
     }
 
-    Ok(offset + num * Coord::SIZE)
+    Ok(offset + num * 16)
 }
 
 fn display_polygon(buf: &[u8], endian: Endian, f: &mut fmt::Formatter) -> FmtResult {

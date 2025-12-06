@@ -1,5 +1,5 @@
 use geo::{Distance, Haversine};
-use geob::{GeoKind, Geob, rstar::RStarPoint};
+use geob::{Geob, rstar::RStarPoint, types::GeometryRef};
 use rstar::{RTreeObject, SelectionFunction};
 use rusqlite::Error;
 
@@ -111,8 +111,8 @@ impl RStarTree {
                     .into_iter()
                     .map(|(id, geo)| {
                         let geometry = geo.geometry();
-                        let point = match geometry.kind() {
-                            GeoKind::Point(point) => {
+                        let point = match geometry {
+                            GeometryRef::Point(point) => {
                                 rusqlite::Result::<_, rusqlite::Error>::Ok(point)
                             }
                             _ => {
@@ -139,8 +139,8 @@ impl RStarTree {
             Self::Point(tree) => {
                 //
                 let geometry = geo.geometry();
-                let point = match geometry.kind() {
-                    GeoKind::Point(point) => point,
+                let point = match geometry {
+                    GeometryRef::Point(point) => point,
                     _ => {
                         panic!("Invalid geometry")
                     }
@@ -172,8 +172,8 @@ impl RStarTree {
 
         let mut iter = if let Some(distance) = distance_lt {
             let geo = geometry_eq.unwrap();
-            match (self, geo.geometry().kind()) {
-                (Self::Point(tree), GeoKind::Point(point)) => {
+            match (self, geo.geometry()) {
+                (Self::Point(tree), GeometryRef::Point(point)) => {
                     let point = RStarPoint::new(point.x(), point.y());
                     let iter = tree.locate_within_distance(point, distance).map(move |m| {
                         (

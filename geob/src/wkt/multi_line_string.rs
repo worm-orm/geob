@@ -1,11 +1,11 @@
 use alloc::boxed::Box;
 use byteorder::{BigEndian, LittleEndian};
-use udled::{bytes::Endian, AsBytes, AsChar, Buffer, IntoTokenizer, Reader, TokenizerExt};
+use udled::{AsBytes, AsChar, Buffer, IntoTokenizer, Reader, TokenizerExt, bytes::Endian};
 
 use crate::{
+    GeoType,
     wkt::{common::ws, point::parse_coords},
     writer::{BinaryWriter, ToBytes},
-    GeoType,
 };
 
 pub fn parse_multi_line_string<'input, B, W>(
@@ -67,9 +67,9 @@ where
             input.eat((',', &ws_opt))?;
         }
 
-        count += 1;
-
         parse_coords(input, out, endian)?;
+
+        count += 1;
     }
     input.eat((ws_opt, ')'))?;
 

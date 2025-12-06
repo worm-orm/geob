@@ -77,7 +77,7 @@ impl<'a> CoordSeqRef<'a> {
             return None;
         }
 
-        let byte_idx = 1 + idx * 16;
+        let byte_idx = size_of::<u32>() + idx * 16;
         Input::new(&self.data[byte_idx..])
             .parse(CoordRef::byteorder(self.endian))
             .ok()
@@ -93,9 +93,35 @@ impl<'a> CoordSeqRef<'a> {
     }
 }
 
+impl<'a> PartialEq for CoordSeqRef<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        if self.len() != other.len() {
+            return false;
+        }
+
+        for (left, right) in self.iter().zip(other.iter()) {
+            if left != right {
+                return false;
+            }
+        }
+
+        true
+    }
+}
+
 impl<'a> CoordSeqRef<'a> {
     pub(crate) const fn new(data: &'a [u8], endian: Endian) -> CoordSeqRef<'a> {
         CoordSeqRef { data, endian }
+    }
+}
+
+impl<'a> fmt::Debug for CoordSeqRef<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut writer = f.debug_list();
+
+        writer.entries(self.iter());
+
+        writer.finish()
     }
 }
 
@@ -105,6 +131,7 @@ impl<'input> FromBytes<'input, &'input [u8]> for CoordSeqRef<'input> {
         byteorder: Endian,
     ) -> udled::Result<Self> {
         let len = reader.parse(u32::byteorder(byteorder))?;
+
         let coords = reader.parse(
             CoordRef::byteorder(byteorder)
                 .repeat(len.value as _)
@@ -157,7 +184,7 @@ impl<'a> MultiCoordSeqRef<'a> {
             return None;
         }
 
-        let mut input = Input::new(self.data);
+        let mut input = Input::new(&self.data[4..]);
 
         if idx == 0 {
             input
@@ -172,7 +199,7 @@ impl<'a> MultiCoordSeqRef<'a> {
                         .map(|m| m.value)
                         .ok();
                 } else {
-                    input.parse(CoordSeqRef::byteorder(self.endian)).ok();
+                    input.eat(CoordSeqRef::byteorder(self.endian)).ok();
                 }
             }
 
@@ -195,12 +222,39 @@ impl<'a> MultiCoordSeqRef<'a> {
     }
 }
 
+impl<'a> fmt::Debug for MultiCoordSeqRef<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut writer = f.debug_list();
+
+        writer.entries(self.iter());
+
+        writer.finish()
+    }
+}
+
+impl<'a> PartialEq for MultiCoordSeqRef<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        if self.len() != other.len() {
+            return false;
+        }
+
+        for (left, right) in self.iter().zip(other.iter()) {
+            if left != right {
+                return false;
+            }
+        }
+
+        true
+    }
+}
+
 impl<'input> FromBytes<'input, &'input [u8]> for MultiCoordSeqRef<'input> {
     fn parse(
         reader: &mut udled::Reader<'_, 'input, &'input [u8]>,
         byteorder: Endian,
     ) -> udled::Result<Self> {
         let len = reader.parse(u32::byteorder(byteorder))?;
+
         let coords = reader.parse(
             CoordSeqRef::byteorder(byteorder)
                 .repeat(len.value as _)
@@ -253,7 +307,7 @@ impl<'a> CoordSegSegSegRef<'a> {
             return None;
         }
 
-        let mut input = Input::new(self.data);
+        let mut input = Input::new(&self.data[4..]);
 
         if idx == 0 {
             input
@@ -288,6 +342,32 @@ impl<'a> CoordSegSegSegRef<'a> {
 impl<'a> CoordSegSegSegRef<'a> {
     pub(crate) const fn new(data: &'a [u8], endian: Endian) -> CoordSegSegSegRef<'a> {
         CoordSegSegSegRef { data, endian }
+    }
+}
+
+impl<'a> fmt::Debug for CoordSegSegSegRef<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut writer = f.debug_list();
+
+        writer.entries(self.iter());
+
+        writer.finish()
+    }
+}
+
+impl<'a> PartialEq for CoordSegSegSegRef<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        if self.len() != other.len() {
+            return false;
+        }
+
+        for (left, right) in self.iter().zip(other.iter()) {
+            if left != right {
+                return false;
+            }
+        }
+
+        true
     }
 }
 

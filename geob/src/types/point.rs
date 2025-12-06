@@ -1,50 +1,37 @@
-use core::fmt::write;
-
-use udled::{
-    TokenizerExt,
-    bytes::{Endian, FromBytes, FromBytesExt},
-};
+use alloc::fmt;
+use udled::bytes::{Endian, FromBytes, FromBytesExt};
 
 use crate::{
     GeoType,
     types::coords::CoordRef,
     util::{get_endian, read_f64, write_f64},
-    writer::{BinaryWriter, ToBytes},
+    writer::ToBytes,
 };
 
-#[derive(Clone, Copy)]
-pub struct PointRef<'a> {
-    bytes: &'a [u8],
-    endian: Endian,
-}
+#[derive(Clone, Copy, PartialEq)]
+#[repr(transparent)]
+pub struct PointRef<'a>(pub(crate) CoordRef<'a>);
 
 impl<'a> PointRef<'a> {
     pub fn coord(&self) -> CoordRef<'a> {
-        CoordRef::new(&self.bytes[1..], self.endian)
+        self.0
     }
 
     pub fn x(&self) -> f64 {
-        CoordRef::new(&self.bytes[1..], self.endian).x()
+        self.0.x()
     }
 
     pub fn y(&self) -> f64 {
-        CoordRef::new(&self.bytes[1..], self.endian).y()
+        self.0.y()
     }
 }
 
-struct PointType;
-
-impl<'input> FromBytes<'input, &'input [u8]> for PointType {
-    fn parse(
-        reader: &mut udled::Reader<'_, 'input, &'input [u8]>,
-        byteorder: Endian,
-    ) -> udled::Result<Self> {
-        let ty = reader.parse(GeoType::byteorder(byteorder))?;
-        if ty.value != GeoType::Point {
-            return Err(reader.error("Expected a point"))?;
-        }
-
-        Ok(Self)
+impl<'a> fmt::Debug for PointRef<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("PointRef")
+            .field("x", &self.x())
+            .field("y", &self.y())
+            .finish()
     }
 }
 
@@ -53,26 +40,13 @@ impl<'input> FromBytes<'input, &'input [u8]> for PointRef<'input> {
         reader: &mut udled::Reader<'_, 'input, &'input [u8]>,
         byteorder: Endian,
     ) -> udled::Result<Self> {
-        let bytes = reader.parse(
-            (
-                PointType::byteorder(byteorder),
-                CoordRef::byteorder(byteorder),
-            )
-                .slice(),
-        )?;
+        let bytes = reader.parse(CoordRef::byteorder(byteorder))?;
 
-        Ok(Self {
-            bytes: bytes.value,
-            endian: byteorder,
-        })
-    }
-
-    fn is(reader: &mut udled::Reader<'_, 'input, &'input [u8]>, byteorder: Endian) -> bool {
-        reader.is(PointType::byteorder(byteorder))
+        Ok(Self(bytes.value))
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 #[repr(C, align(8))]
 pub struct Point {
     bytes: [u8; 18],
@@ -81,6 +55,15 @@ pub struct Point {
 impl PartialEq for Point {
     fn eq(&self, other: &Self) -> bool {
         self.x() == other.x() && self.y() == other.y()
+    }
+}
+
+impl fmt::Debug for Point {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("Point")
+            .field("x", &self.x())
+            .field("y", &self.y())
+            .finish()
     }
 }
 

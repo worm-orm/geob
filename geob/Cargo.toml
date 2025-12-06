@@ -6,11 +6,11 @@ edition = "2024"
 
 [features]
 # default = ["rstar"]
-# default = ["proj", "geo-types"]
+default = ["proj", "geo-types"]
 geo-traits = ["dep:geo-traits"]
 proj = ["dep:proj"]
 sqlite = ["rusqlite"]
-rstar = ["dep:rstar", "geo-traits", "dep:geo", "dep:geo-types"]
+rstar = ["dep:rstar", "geo-traits", "dep:geo", "geo-types/rstar_0_12"]
 
 [dependencies]
 udled = { version = "0.6", features = ["binary"] }
@@ -24,4 +24,4 @@ rusqlite = { version = "0.37", default-features = false, optional = true }
 rstar = { version = "0.12", optional = true }
 
 geo = { version = "*", optional = true }
-geo-types = { version = "0.7", features = ["rstar_0_12"], optional = true }
+geo-types = { version = "0.7", features = [], optional = true }

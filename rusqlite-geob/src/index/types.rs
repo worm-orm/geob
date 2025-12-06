@@ -1,6 +1,6 @@
 use std::ffi::c_int;
 
-use geob::{GeoKind, GeoType};
+use geob::GeoType;
 
 pub const ID_IDX: c_int = 0;
 pub const GEO_IDX: c_int = 1;

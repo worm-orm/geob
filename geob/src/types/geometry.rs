@@ -1,4 +1,7 @@
-use udled::bytes::{FromBytes, FromBytesExt};
+use udled::{
+    Input,
+    bytes::{Endian, FromBytes, FromBytesExt},
+};
 
 use crate::{
     GeoType,
@@ -8,7 +11,7 @@ use crate::{
     },
 };
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum GeometryRef<'a> {
     Point(PointRef<'a>),
     LineString(LineStringRef<'a>),
@@ -19,16 +22,18 @@ pub enum GeometryRef<'a> {
     Collection(CollectionRef<'a>),
 }
 
+impl<'a> GeometryRef<'a> {
+    pub fn validate(bytes: &[u8], endian: Endian) -> Result<(), udled::Error> {
+        Input::new(bytes).eat(GeometryRef::byteorder(endian))
+    }
+}
+
 impl<'a> FromBytes<'a, &'a [u8]> for GeometryRef<'a> {
     fn parse(
         reader: &mut udled::Reader<'_, 'a, &'a [u8]>,
         byteorder: udled::bytes::Endian,
     ) -> udled::Result<Self> {
-        let ty = reader
-            .peek_ch()
-            .ok_or_else(|| reader.error("Expected type"))?;
-
-        let ty = GeoType::from_u8(ty).ok_or_else(|| reader.error("Expected type"))?;
+        let ty = reader.parse(GeoType::byteorder(byteorder))?.value;
 
         let geo = match ty {
             GeoType::Point => GeometryRef::Point(

@@ -22,7 +22,7 @@ impl FromSql for Geob {
                 Geob::from_text(text).map_err(|err| FromSqlError::Other(err.into()))
             }
             ValueRef::Blob(blob) => {
-                Geob::from_bytes(blob).ok_or_else(|| FromSqlError::Other("Invalid format".into()))
+                Geob::from_bytes(blob).map_err(|err| FromSqlError::Other(err.into()))
             }
             _ => Err(FromSqlError::InvalidType),
         }

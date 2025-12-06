@@ -1,16 +1,14 @@
 use crate::{
-    GeoType, Geometry,
-    util::{get_endian, read_u32},
+    GeoType, SRID,
+    types::{GeobParser, GeobRef, GeometryRef, LineStringRef, PointRef, PolygonRef},
+    util::{get_endian, read_u32, write_u32},
     wkt,
     writer::{BinaryWriter, ToBytes},
 };
 use alloc::{sync::Arc, vec::Vec};
 use core::fmt;
 
-use udled::{
-    Input,
-    bytes::{Endian, FromBytesExt},
-};
+use udled::{Input, bytes::Endian};
 
 #[derive(Clone)]
 pub struct Geob(Arc<[u8]>);
@@ -24,6 +22,12 @@ impl fmt::Debug for Geob {
 impl fmt::Display for Geob {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         wkt::display_geometry(self, f)
+    }
+}
+
+impl PartialEq for Geob {
+    fn eq(&self, other: &Self) -> bool {
+        self.srid() == other.srid() && self.geometry() == other.geometry()
     }
 }
 
@@ -54,39 +58,59 @@ impl Geob {
         wkt::parse(input, Endian::native())
     }
 
-    pub fn from_bytes<T: Into<Vec<u8>> + AsRef<[u8]>>(input: T) -> Option<Geob> {
-        if !Geometry::validate(input.as_ref()) {
-            None
-        } else {
-            Some(Geob::new(input.into()))
-        }
+    pub fn from_bytes<T: Into<Vec<u8>> + AsRef<[u8]>>(bytes: T) -> Result<Geob, udled::Error> {
+        let mut input = Input::new(bytes.as_ref());
+        input.eat(GeobParser)?;
+
+        let bytes: Vec<u8> = bytes.into();
+
+        Ok(Self(Arc::from(bytes)))
     }
 
     pub fn srid(&self) -> u32 {
-        let Some(endian) = get_endian(self.0[0]) else {
-            panic!("Could not get endian")
-        };
+        read_u32(&self.0[1..], self.endian())
+    }
 
-        read_u32(&self.0[1..], endian)
+    pub fn set_srid(&mut self, srid: SRID) {
+        let endian = self.endian();
+        write_u32(Arc::make_mut(&mut self.0), srid.into(), endian);
     }
 
     pub fn kind(&self) -> GeoType {
-        let Some(endian) = get_endian(self.0[0]) else {
-            panic!("Could not get endian")
-        };
-
-        Input::new(&self.0[5..])
-            .parse(GeoType::byteorder(endian))
-            .unwrap()
-            .value
-    }
-
-    pub fn geometry(&self) -> Geometry<'_> {
-        Geometry::from_bytes(&self.0).unwrap()
+        GeoType::from_u8(self.0[5]).unwrap()
     }
 
     pub fn len(&self) -> usize {
         self.0.len()
+    }
+
+    pub fn endian(&self) -> Endian {
+        get_endian(self.0[0]).unwrap()
+    }
+
+    pub fn geometry(&self) -> GeometryRef<'_> {
+        GeobRef::new(&self.0).geometry()
+    }
+
+    pub fn as_point(&self) -> Option<PointRef<'_>> {
+        match self.geometry() {
+            GeometryRef::Point(line) => Some(line),
+            _ => None,
+        }
+    }
+
+    pub fn as_line_string(&self) -> Option<LineStringRef<'_>> {
+        match self.geometry() {
+            GeometryRef::LineString(line) => Some(line),
+            _ => None,
+        }
+    }
+
+    pub fn as_polygon(&self) -> Option<PolygonRef<'_>> {
+        match self.geometry() {
+            GeometryRef::Polygon(line) => Some(line),
+            _ => None,
+        }
     }
 }
 

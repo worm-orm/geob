@@ -1,3 +1,4 @@
+use alloc::fmt;
 use udled::{
     AsSlice, Input, TokenizerExt,
     bytes::{Endian, FromBytes, FromBytesExt},
@@ -5,10 +6,7 @@ use udled::{
 
 use crate::{
     GeoType,
-    types::{
-        geometry::{Geometry, GeometryRef},
-        types::TYPE_LEN,
-    },
+    types::{geometry::GeometryRef, types::TYPE_LEN},
     util::read_u32,
 };
 
@@ -49,6 +47,18 @@ impl<'a> CollectionRef<'a> {
 
             None
         }
+    }
+}
+
+impl<'a> fmt::Debug for CollectionRef<'a> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        todo!()
+    }
+}
+
+impl<'a> PartialEq for CollectionRef<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        todo!()
     }
 }
 
