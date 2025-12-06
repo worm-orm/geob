@@ -9,9 +9,17 @@ mod point;
 mod polygon;
 mod types;
 
-use udled::{AsSlice, Input, Tokenizer, bytes::FromBytesExt};
+use alloc::fmt;
+use udled::{
+    AsSlice, Input, Tokenizer,
+    bytes::{Endian, FromBytesExt},
+};
 
-use crate::{Geob, util::get_endian};
+use crate::{
+    Geob,
+    util::{get_endian, read_u32},
+    wkt,
+};
 
 pub use self::{
     collection::CollectionRef,
@@ -27,6 +35,7 @@ pub use self::{
     types::*,
 };
 
+#[derive(Clone, Copy)]
 pub struct GeobRef<'a> {
     pub bytes: &'a [u8],
 }
@@ -53,6 +62,32 @@ impl<'a> GeobRef<'a> {
             .parse(GeometryRef::byteorder(endian))
             .map(|m| m.value)
             .unwrap()
+    }
+
+    pub fn srid(&self) -> u32 {
+        read_u32(&self.bytes[1..], self.endian())
+    }
+
+    pub fn endian(&self) -> Endian {
+        get_endian(self.bytes[0]).unwrap()
+    }
+}
+
+impl<'a> fmt::Debug for GeobRef<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("GeomB").field(&self.geometry()).finish()
+    }
+}
+
+impl<'a> fmt::Display for GeobRef<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        wkt::display_geometry(*self, f)
+    }
+}
+
+impl<'a> PartialEq for GeobRef<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        self.srid() == other.srid() && self.geometry() == other.geometry()
     }
 }
 

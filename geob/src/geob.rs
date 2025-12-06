@@ -22,7 +22,7 @@ impl fmt::Debug for Geob {
 
 impl fmt::Display for Geob {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        wkt::display_geometry(self, f)
+        wkt::display_geometry(self.as_ref(), f)
     }
 }
 
@@ -81,6 +81,10 @@ impl Geob {
         read_u32(&self.0[1..], self.endian())
     }
 
+    pub fn endian(&self) -> Endian {
+        get_endian(self.0[0]).unwrap()
+    }
+
     pub fn set_srid(&mut self, srid: SRID) {
         let endian = self.endian();
         write_u32(Arc::make_mut(&mut self.0), srid.into(), endian);
@@ -92,10 +96,6 @@ impl Geob {
 
     pub fn len(&self) -> usize {
         self.0.len()
-    }
-
-    pub fn endian(&self) -> Endian {
-        get_endian(self.0[0]).unwrap()
     }
 
     pub fn geometry(&self) -> GeometryRef<'_> {

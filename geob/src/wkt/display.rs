@@ -9,11 +9,12 @@ type FmtResult = Result<usize, fmt::Error>;
 
 use crate::{
     GeoType, Geob,
+    types::GeobRef,
     util::{read_f64, read_u32},
 };
 
-pub fn display_geometry(geo: &Geob, f: &mut fmt::Formatter) -> fmt::Result {
-    let output = geo.slice();
+pub fn display_geometry(geo: GeobRef<'_>, f: &mut fmt::Formatter) -> fmt::Result {
+    let output = geo.bytes;
 
     let endian = match output[0] {
         0 => Endian::Big,
