@@ -68,6 +68,11 @@ impl Geob {
         Ok(Self(Arc::from(bytes)))
     }
 
+    pub unsafe fn from_bytes_unchecked<T: Into<Vec<u8>> + AsRef<[u8]>>(bytes: T) -> Geob {
+        let bytes: Vec<u8> = bytes.into();
+        Self(Arc::from(bytes))
+    }
+
     pub fn srid(&self) -> u32 {
         read_u32(&self.0[1..], self.endian())
     }

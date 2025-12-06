@@ -11,7 +11,7 @@ mod types;
 
 use udled::{AsSlice, Input, Tokenizer, bytes::FromBytesExt};
 
-use crate::util::get_endian;
+use crate::{Geob, util::get_endian};
 
 pub use self::{
     collection::CollectionRef,
@@ -34,6 +34,10 @@ pub struct GeobRef<'a> {
 impl<'a> GeobRef<'a> {
     pub(crate) const fn new(bytes: &'a [u8]) -> GeobRef<'a> {
         GeobRef { bytes }
+    }
+
+    pub fn to_owned(&self) -> Geob {
+        unsafe { Geob::from_bytes_unchecked(self.bytes) }
     }
 }
 
