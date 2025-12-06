@@ -235,6 +235,7 @@ dependencies = [
  "proj",
  "rstar",
  "rusqlite",
+ "serde",
  "udled",
  "udled-tokenizers",
 ]

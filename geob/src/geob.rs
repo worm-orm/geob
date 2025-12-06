@@ -7,6 +7,7 @@ use crate::{
 };
 use alloc::{sync::Arc, vec::Vec};
 use core::fmt;
+use geo_traits::to_geo::ToGeoGeometry;
 
 use udled::{Input, bytes::Endian};
 
@@ -132,5 +133,26 @@ impl Geob {
 
     pub(crate) fn new(bytes: Vec<u8>) -> Geob {
         Geob(bytes.into())
+    }
+}
+
+#[cfg(feature = "serde")]
+impl serde::Serialize for Geob {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        self.geometry().to_geometry().serialize(serializer)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for Geob {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let geo = geo_types::Geometry::deserialize(deserializer)?;
+        Ok(Geob::from_geo_type(&geo, 0))
     }
 }
