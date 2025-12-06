@@ -68,6 +68,10 @@ impl Geob {
         Ok(Self(Arc::from(bytes)))
     }
 
+    pub fn as_ref(&self) -> GeobRef<'_> {
+        GeobRef::new(&self.0)
+    }
+
     pub unsafe fn from_bytes_unchecked<T: Into<Vec<u8>> + AsRef<[u8]>>(bytes: T) -> Geob {
         let bytes: Vec<u8> = bytes.into();
         Self(Arc::from(bytes))
@@ -117,12 +121,6 @@ impl Geob {
             GeometryRef::Polygon(line) => Some(line),
             _ => None,
         }
-    }
-}
-
-impl AsRef<[u8]> for Geob {
-    fn as_ref(&self) -> &[u8] {
-        &self.0
     }
 }
 

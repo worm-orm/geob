@@ -39,6 +39,11 @@ impl<'a> GeobRef<'a> {
     pub fn to_owned(&self) -> Geob {
         unsafe { Geob::from_bytes_unchecked(self.bytes) }
     }
+
+    pub fn from_bytes(bytes: &'a [u8]) -> udled::Result<GeobRef<'a>> {
+        let mut input = Input::new(bytes.as_ref());
+        input.parse(GeobParser)
+    }
 }
 
 impl<'a> GeobRef<'a> {

@@ -8,7 +8,7 @@ use crate::{Geob, types::GeobRef};
 impl ToSql for Geob {
     fn to_sql(&self) -> Result<rusqlite::types::ToSqlOutput<'_>> {
         Ok(rusqlite::types::ToSqlOutput::Borrowed(ValueRef::Blob(
-            self.as_ref(),
+            self.slice(),
         )))
     }
 }
@@ -31,13 +31,13 @@ impl FromSql for Geob {
 
 impl From<Geob> for Value {
     fn from(value: Geob) -> Self {
-        Value::Blob(value.as_ref().to_vec())
+        Value::Blob(value.slice().to_vec())
     }
 }
 
 impl<'a> From<&'a Geob> for ValueRef<'a> {
     fn from(value: &'a Geob) -> Self {
-        ValueRef::Blob(value.as_ref())
+        ValueRef::Blob(value.slice())
     }
 }
 
