@@ -22,19 +22,19 @@ fn main() -> Result<(), Box<dyn core::error::Error>> {
 
     println!(
         "Distance {}",
-        Euclidean.distance(
-            rust.project_into(SRID::WGS84.into())
+        Haversine.distance(
+            rust.project_into(2197)
                 .geometry()
                 .to_geometry()
                 .into_point()
                 .unwrap(),
             lygten
-                .project_into(SRID::WGS84.into())
+                .project_into(2197)
                 .geometry()
                 .to_geometry()
                 .into_point()
                 .unwrap()
-        ) * 360.
+        )
     );
 
     println!("{:?}", geob.kind());
