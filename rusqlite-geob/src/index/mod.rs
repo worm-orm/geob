@@ -366,7 +366,10 @@ impl<'vtab> UpdateVTab<'vtab> for SpartialIndex {
 
     fn insert(&mut self, args: &vtab::Inserts<'_>) -> Result<i64> {
         let id: u64 = args.get(2)?;
-        let geo: Geob = args.get(3)?;
+        let geo: Option<Geob> = args.get(3)?;
+
+        // TODO: Insert empty
+        let Some(geo) = geo else { return Ok(0) };
 
         let ty: GeometryType = geo.kind().into();
 
