@@ -15,6 +15,7 @@ pub const SRID_LEN: usize = size_of::<u32>();
 
 pub const GEOB_HEADER: usize = ENDIAN_LEN + SRID_LEN;
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(u8)]
 pub enum GeoType {
