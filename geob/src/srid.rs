@@ -79,6 +79,7 @@ impl From<u32> for SRID {
 }
 
 impl SRID {
+    pub const UNKNOWN: SRID = SRID(0);
     pub const WEB_MERCATOR: SRID = SRID(EPSG::WEB_MERCATOR.id);
     pub const WGS84: SRID = SRID(EPSG::WGS84.id);
 }
