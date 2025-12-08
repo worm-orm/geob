@@ -1,4 +1,6 @@
-use alloc::borrow::Cow;
+use alloc::{borrow::Cow, fmt};
+
+use crate::writer::ToBytes;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(C)]
@@ -79,4 +81,20 @@ impl From<u32> for SRID {
 impl SRID {
     pub const WEB_MERCATOR: SRID = SRID(EPSG::WEB_MERCATOR.id);
     pub const WGS84: SRID = SRID(EPSG::WGS84.id);
+}
+
+impl fmt::Display for SRID {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl ToBytes for SRID {
+    fn write<W: crate::writer::BinaryWriter>(
+        &self,
+        output: &mut W,
+        endian: udled::bytes::Endian,
+    ) -> Result<(), W::Error> {
+        self.0.write(output, endian)
+    }
 }

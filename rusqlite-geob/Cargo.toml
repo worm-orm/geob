@@ -13,7 +13,7 @@ geob = { path = "../geob", features = ["geo-traits", "sqlite", "rstar"] }
 rusqlite = { version = "0.37", features = ["functions", "vtab"] }
 
 geo-traits = { version = "0.3" }
-geo = { version = "0.31" }
+geo = { version = "0.32" }
 
 udled = { version = "0.6" }
 udled-tokenizers = { version = "0.5" }

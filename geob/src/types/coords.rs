@@ -326,12 +326,6 @@ impl<'a> CoordSegSegSegRef<'a> {
     }
 }
 
-impl<'a> CoordSegSegSegRef<'a> {
-    pub(crate) const fn new(data: &'a [u8], endian: Endian) -> CoordSegSegSegRef<'a> {
-        CoordSegSegSegRef { data, endian }
-    }
-}
-
 impl<'a> fmt::Debug for CoordSegSegSegRef<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut writer = f.debug_list();

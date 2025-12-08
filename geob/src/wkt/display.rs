@@ -8,7 +8,7 @@ use udled::{
 type FmtResult = Result<usize, fmt::Error>;
 
 use crate::{
-    GeoType, Geob,
+    GeoType,
     types::GeobRef,
     util::{read_f64, read_u32},
 };

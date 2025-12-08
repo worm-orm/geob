@@ -1,5 +1,5 @@
 use geo::{Coord, coord, point};
-use geob::Geob;
+use geob::{Geob, SRID};
 use rusqlite::Connection;
 
 fn main() -> rusqlite::Result<()> {
@@ -16,9 +16,9 @@ fn main() -> rusqlite::Result<()> {
     let rust = point!(x: 12.559285, y: 55.691249);
     let lygten = point!(x:12.5378308, y: 55.7036352);
 
-    let loppen = Geob::from_geo_type(&loppen, 3857);
-    let rust = Geob::from_geo_type(&rust, 3857);
-    let lygten = Geob::from_geo_type(&lygten, 3857);
+    let loppen = Geob::from_geo_type(&loppen, SRID::WEB_MERCATOR);
+    let rust = Geob::from_geo_type(&rust, SRID::WEB_MERCATOR);
+    let lygten = Geob::from_geo_type(&lygten, SRID::WEB_MERCATOR);
 
     db.execute("CREATE TABLE test(point blob, name text)", ())?;
 
@@ -41,7 +41,7 @@ fn main() -> rusqlite::Result<()> {
         println!("ID {}, GEOM {}: {}", name, geo, dis);
     }
 
-    db.execute("DELETE FROM test where rowid = 2", [])?;
+    db.execute("UPDATE test SET point = ? where rowid = 1", [&lygten])?;
 
     let mut stmt = db.prepare("SELECT id, ST_ToText(geometry) FROM test_index")?;
 

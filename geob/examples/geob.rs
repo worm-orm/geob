@@ -23,13 +23,13 @@ fn main() -> Result<(), Box<dyn core::error::Error>> {
     println!(
         "Distance {}",
         Haversine.distance(
-            rust.project_into(2197)
+            rust.project_into(4096)
                 .geometry()
                 .to_geometry()
                 .into_point()
                 .unwrap(),
             lygten
-                .project_into(2197)
+                .project_into(4096)
                 .geometry()
                 .to_geometry()
                 .into_point()

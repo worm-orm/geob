@@ -1,7 +1,7 @@
 use std::num::ParseIntError;
 
 use core::fmt::Write as _;
-use geob::{GeoType, Geob};
+use geob::{Geob, SRID};
 use rusqlite::{
     Connection, Error, Result,
     ffi::{self, sqlite3_vtab},
@@ -24,40 +24,6 @@ use self::types::GeometryType;
 const COLUMN_TRIGGER: &str = include_str!("column_index.sql");
 
 pub fn register_module(conn: &Connection) -> Result<()> {
-    // conn.create_scalar_function("ST_CreateIndex", 2, FunctionFlags::default(), |ctx| {
-    //     //
-    //     let table_name: String = ctx.get(0)?;
-    //     let column_name: String = ctx.get(1)?;
-
-    //     unsafe {
-    //         let conn = ctx.get_connection()?;
-    //         if !conn.table_exists(None, "SpartialIndex_indices")? {
-    //             conn.execute(
-    //                 "CREATE TABLE SpartialIndex_indices (table_name TEXT, column_name TEXT)",
-    //                 [],
-    //             )?;
-    //         }
-
-    //         conn.execute(
-    //             "INSERT INTO SpartialIndex_indices (table_name, column_name) VALUES (?, ?)",
-    //             [&table_name, &column_name],
-    //         )?;
-
-    //         let sql = replace(
-    //             COLUMN_TRIGGER,
-    //             &CreateIndex {
-    //                 table: &table_name,
-    //                 column: &column_name,
-    //             },
-    //         )
-    //         .unwrap();
-
-    //         conn.execute(&sql, [])?;
-    //     }
-
-    //     Ok(true)
-    // })?;
-
     conn.create_module(
         "SpartialIndex",
         vtab::update_module::<SpartialIndex>(),
@@ -79,7 +45,7 @@ pub struct SpartialIndex {
     base: ffi::sqlite3_vtab,
     tree: tree::RStarTree,
     name: String,
-    srid: u32,
+    srid: SRID,
     table: String,
     column: String,
     ty: GeometryType,
@@ -92,7 +58,7 @@ unsafe impl<'vtab> VTab<'vtab> for SpartialIndex {
 
     fn connect(
         db: &mut rusqlite::vtab::VTabConnection,
-        aux: Option<&Self::Aux>,
+        _aux: Option<&Self::Aux>,
         args: &[&[u8]],
     ) -> rusqlite::Result<(String, Self)> {
         if args.len() < 4 {
@@ -185,7 +151,7 @@ unsafe impl<'vtab> VTab<'vtab> for SpartialIndex {
 
         let schema = ty.schema().to_string();
 
-        let mut conn = unsafe { Connection::from_handle(db.handle())? };
+        let conn = unsafe { Connection::from_handle(db.handle())? };
 
         let sql = replace(
             COLUMN_TRIGGER,
@@ -217,7 +183,7 @@ unsafe impl<'vtab> VTab<'vtab> for SpartialIndex {
                 base: sqlite3_vtab::default(),
                 tree,
                 name,
-                srid,
+                srid: srid.into(),
                 table,
                 column,
                 ty,
@@ -331,8 +297,6 @@ unsafe impl<'vtab> VTab<'vtab> for SpartialIndex {
             let mut constraint_usage = info.constraint_usage(*j);
             constraint_usage.set_argv_index(n_arg);
             constraint_usage.set_omit(true);
-            #[cfg(all(test, feature = "modern_sqlite"))]
-            debug_assert_eq!(Ok("BINARY"), info.collation(*j));
         }
         if !(unusable_mask & !idx_num).is_empty() {
             return Err(Error::ModuleError("Constraint error".to_string()));
@@ -368,22 +332,21 @@ impl<'vtab> UpdateVTab<'vtab> for SpartialIndex {
         let id: u64 = args.get(2)?;
         let geo: Option<Geob> = args.get(3)?;
 
-        // TODO: Insert empty
         let Some(geo) = geo else { return Ok(0) };
 
-        let ty: GeometryType = geo.kind().into();
-
-        if !self.ty.is_valid(ty) {
-            return Err(Error::ModuleError("Invalid geometric type".to_string()));
-        }
-
-        self.tree.insert(id, geo);
+        self.tree.insert(id, geo)?;
 
         Ok(0)
     }
 
     fn update(&mut self, args: &vtab::Updates<'_>) -> Result<()> {
-        todo!()
+        let rowid: u64 = args.get(0)?;
+        let geob: Geob = args.get(3)?;
+
+        let _ = self.tree.remove(rowid as _);
+        self.tree.insert(rowid, geob)?;
+
+        Ok(())
     }
 }
 
@@ -408,9 +371,6 @@ impl<'a> Lookup for CreateIndex<'a> {
             "column" => {
                 output.push_str(self.column);
             }
-            // "srid" => {
-            //     write!(output, "{}", self.srid)?;
-            // }
             _ => return Err(core::fmt::Error),
         }
 

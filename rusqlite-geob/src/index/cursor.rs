@@ -35,7 +35,7 @@ unsafe impl<'vtab> VTabCursor for SpartialIndexCursor<'vtab> {
     fn filter(
         &mut self,
         idx_num: std::ffi::c_int,
-        idx_str: Option<&str>,
+        _idx_str: Option<&str>,
         args: &rusqlite::vtab::Filters<'_>,
     ) -> rusqlite::Result<()> {
         let idx_num = QueryPlanFlags::from_bits_truncate(idx_num);
@@ -99,10 +99,7 @@ unsafe impl<'vtab> VTabCursor for SpartialIndexCursor<'vtab> {
             1 => {
                 ctx.set_result(&next.1)?;
             }
-            2 => {}
-            _ => {
-                panic!("Inalid column");
-            }
+            _ => {}
         }
         Ok(())
     }

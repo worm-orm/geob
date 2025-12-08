@@ -44,7 +44,7 @@ pub fn register_functions(conn: &Connection) -> Result<bool> {
         |ctx| {
             let text: Geob = ctx.get(0)?;
 
-            let output = text.srid();
+            let output: u32 = text.srid().into();
 
             Ok(output)
         },
@@ -69,7 +69,7 @@ pub fn register_functions(conn: &Connection) -> Result<bool> {
             let mut text: Geob = ctx.get(0)?;
             let srid: u32 = ctx.get(1)?;
 
-            if srid == text.srid() {
+            if srid == text.srid().into() {
                 return Ok(text);
             }
 

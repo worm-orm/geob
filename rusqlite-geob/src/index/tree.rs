@@ -1,5 +1,5 @@
 use geo::{Distance, Haversine};
-use geob::{Geob, rstar::RStarPoint, types::GeometryRef};
+use geob::{Geob, SRID, rstar::RStarPoint, types::GeometryRef};
 use rstar::{RTreeObject, SelectionFunction};
 use rusqlite::Error;
 
@@ -134,7 +134,7 @@ impl RStarTree {
         Ok(())
     }
 
-    pub fn insert(&mut self, id: u64, geo: Geob) {
+    pub fn insert(&mut self, id: u64, geo: Geob) -> rusqlite::Result<()> {
         match self {
             Self::Point(tree) => {
                 //
@@ -142,7 +142,9 @@ impl RStarTree {
                 let point = match geometry {
                     GeometryRef::Point(point) => point,
                     _ => {
-                        panic!("Invalid geometry")
+                        return Err(rusqlite::Error::ModuleError(
+                            "Index require as Point type".to_string(),
+                        ));
                     }
                 };
 
@@ -155,19 +157,21 @@ impl RStarTree {
                 tree.insert(GeometryEntry { id, point: geo });
             }
         }
+
+        Ok(())
     }
 
     pub fn select<'a>(
         &'a self,
-        srid: u32,
+        srid: SRID,
         query: Query,
     ) -> rusqlite::Result<Box<dyn Iterator<Item = (u64, Geob)> + 'a>> {
         let Query {
-            distance_eq,
             distance_lt,
             geometry_eq,
             geometry_match,
             id_eq,
+            ..
         } = query;
 
         let mut iter = if let Some(distance) = distance_lt {
@@ -185,7 +189,9 @@ impl RStarTree {
                     Box::new(iter) as Box<dyn Iterator<Item = (u64, Geob)> + 'a>
                 }
                 _ => {
-                    panic!("Point")
+                    return Err(rusqlite::Error::ModuleError(
+                        "Index require as Point type".to_string(),
+                    ));
                 }
             }
         } else if let Some(geo) = geometry_match {
@@ -249,7 +255,7 @@ impl RStarTree {
         }
     }
 
-    pub fn iter<'a>(&'a self, srid: u32) -> Box<dyn Iterator<Item = (u64, Geob)> + 'a> {
+    pub fn iter<'a>(&'a self, srid: SRID) -> Box<dyn Iterator<Item = (u64, Geob)> + 'a> {
         match self {
             RStarTree::Point(rtree) => {
                 let iter = rtree.iter().map(move |m| {

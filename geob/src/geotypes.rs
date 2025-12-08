@@ -1,5 +1,5 @@
 use crate::{
-    GeoType, Geob,
+    GeoType, Geob, SRID,
     types::{
         CollectionRef, CoordRef, GeometryRef, LineStringRef, MultiLineStringRef, MultiPointRef,
         MultiPolygonRef, PointRef, PolygonRef,
@@ -15,9 +15,9 @@ use geo_traits::{
 use udled::bytes::Endian;
 
 impl Geob {
-    pub fn from_geo_type<T: geo_traits::GeometryTrait<T = f64>>(geo: &T, srid: u32) -> Geob {
+    pub fn from_geo_type<T: geo_traits::GeometryTrait<T = f64>>(geo: &T, srid: SRID) -> Geob {
         let mut output = Vec::<u8>::new();
-        process(geo, srid, Endian::native(), &mut output).unwrap();
+        process(geo, srid.into(), Endian::native(), &mut output).unwrap();
         Geob::new(output)
     }
 }

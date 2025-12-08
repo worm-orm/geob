@@ -7,8 +7,6 @@ use crate::{
 };
 use alloc::{sync::Arc, vec::Vec};
 use core::fmt;
-use geo_traits::to_geo::ToGeoGeometry;
-
 use udled::{Input, bytes::Endian};
 
 #[derive(Clone)]
@@ -33,7 +31,7 @@ impl PartialEq for Geob {
 }
 
 impl Geob {
-    pub fn new_point(srid: u32, x: f64, y: f64) -> Result<Geob, <Vec<u8> as BinaryWriter>::Error> {
+    pub fn new_point(srid: SRID, x: f64, y: f64) -> Result<Geob, <Vec<u8> as BinaryWriter>::Error> {
         let endian = Endian::native();
         let mut output = Vec::new();
         let bo = match endian {
@@ -77,8 +75,8 @@ impl Geob {
         Self(Arc::from(bytes))
     }
 
-    pub fn srid(&self) -> u32 {
-        read_u32(&self.0[1..], self.endian())
+    pub fn srid(&self) -> SRID {
+        read_u32(&self.0[1..], self.endian()).into()
     }
 
     pub fn endian(&self) -> Endian {

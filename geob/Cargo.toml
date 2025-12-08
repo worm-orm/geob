@@ -22,7 +22,7 @@ proj = { version = "0.31", default-features = false, optional = true }
 rusqlite = { version = "0.37", default-features = false, optional = true }
 rstar = { version = "0.12", optional = true }
 
-geo = { version = "*", optional = true }
+geo = { version = "0.32", optional = true }
 geo-types = { version = "0.7", features = [], optional = true }
 
 serde = { version = "1", optional = true }
