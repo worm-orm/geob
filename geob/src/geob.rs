@@ -143,6 +143,8 @@ impl serde::Serialize for Geob {
     where
         S: serde::Serializer,
     {
+        use geo_traits::to_geo::ToGeoGeometry;
+
         self.geometry().to_geometry().serialize(serializer)
     }
 }
@@ -154,6 +156,6 @@ impl<'de> serde::Deserialize<'de> for Geob {
         D: serde::Deserializer<'de>,
     {
         let geo = geo_types::Geometry::deserialize(deserializer)?;
-        Ok(Geob::from_geo_type(&geo, 0))
+        Ok(Geob::from_geo_type(&geo, SRID::UNKNOWN))
     }
 }
