@@ -5,6 +5,7 @@ edition = "2024"
 
 
 [features]
+default = ["geo-traits"]
 geo-traits = ["dep:geo-traits"]
 proj = ["dep:proj"]
 sqlite = ["rusqlite"]
@@ -16,7 +17,9 @@ udled = { version = "0.6", features = ["binary"] }
 udled-tokenizers = { version = "0.5" }
 byteorder = { version = "1.5", default-features = false }
 
-geo-traits = { version = "0.3", default-features = false, optional = true }
+geo-traits = { version = "0.3", features = [
+  "geo-types",
+], default-features = false, optional = true }
 proj = { version = "0.31", default-features = false, optional = true }
 
 rusqlite = { version = "0.37", default-features = false, optional = true }
