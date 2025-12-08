@@ -69,7 +69,9 @@ pub fn register_functions(conn: &Connection) -> Result<bool> {
             let mut text: Geob = ctx.get(0)?;
             let srid: u32 = ctx.get(1)?;
 
-            if srid == text.srid().into() {
+            let text_srid: u32 = text.srid().into();
+
+            if srid == text_srid {
                 return Ok(text);
             }
 
