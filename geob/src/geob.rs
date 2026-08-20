@@ -70,6 +70,10 @@ impl Geob {
         GeobRef::new(&self.0)
     }
 
+    pub fn is(&self, ty: GeoType) -> bool {
+        self.as_ref().is(ty)
+    }
+
     pub unsafe fn from_bytes_unchecked<T: Into<Vec<u8>> + AsRef<[u8]>>(bytes: T) -> Geob {
         let bytes: Vec<u8> = bytes.into();
         Self(Arc::from(bytes))

@@ -26,6 +26,19 @@ impl<'a> GeometryRef<'a> {
     pub fn validate(bytes: &[u8], endian: Endian) -> Result<(), udled::Error> {
         Input::new(bytes).eat(GeometryRef::byteorder(endian))
     }
+
+    pub fn is(&self, ty: GeoType) -> bool {
+        match (self, ty) {
+            (GeometryRef::Point(_), GeoType::Point) => true,
+            (GeometryRef::LineString(_), GeoType::LineString) => true,
+            (GeometryRef::MultiPoint(_), GeoType::MultiPoint) => true,
+            (GeometryRef::MultiLineString(_), GeoType::MultiLineString) => true,
+            (GeometryRef::Polygon(_), GeoType::Polygon) => true,
+            (GeometryRef::MultiPolygon(_), GeoType::MultiPolygon) => true,
+            (GeometryRef::Collection(_), GeoType::Collection) => true,
+            _ => false,
+        }
+    }
 }
 
 impl<'a> FromBytes<'a, &'a [u8]> for GeometryRef<'a> {

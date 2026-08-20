@@ -53,6 +53,10 @@ impl<'a> GeobRef<'a> {
         let mut input = Input::new(bytes.as_ref());
         input.parse(GeobParser)
     }
+
+    pub fn is(&self, ty: GeoType) -> bool {
+        self.geometry().is(ty)
+    }
 }
 
 impl<'a> GeobRef<'a> {
