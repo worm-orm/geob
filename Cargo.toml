@@ -5,8 +5,10 @@ resolver = "3"
 members = ["geob", "rusqlite-geob"]
 
 [workspace.dependencies]
+geo-types = { version = "0.7", features = [], }
 rusqlite = { version = "0.37", default-features = false }
-geo = { version = "0.32", default-features = false }
-rstar = { version = "0.12", default-featuresf = false }
+geo = { version = "0.33", default-features = false }
+rstar = { version = "0.13", default-featuresf = false }
 geo-traits = { version = "0.3" }
-geo-types = { version = "0.7" }
+udled = { version = "0.6" }
+udled-tokenizers = { version = "0.5" }

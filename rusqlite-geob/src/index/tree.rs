@@ -197,12 +197,12 @@ impl RStarTree {
         } else if let Some(geo) = geometry_match {
             match self {
                 Self::Any(tree) => Box::new(Box::new(
-                    tree.locate_in_envelope(&geo.envelope())
+                    tree.locate_in_envelope(geo.envelope())
                         .map(|m| (m.id, m.point.clone())),
                 )
                     as Box<dyn Iterator<Item = (u64, Geob)> + 'a>),
                 Self::Point(tree) => {
-                    Box::new(tree.locate_in_envelope(&geo.envelope()).map(move |m| {
+                    Box::new(tree.locate_in_envelope(geo.envelope()).map(move |m| {
                         (
                             m.id,
                             Geob::new_point(srid, m.point.x(), m.point.y()).unwrap(),
@@ -213,12 +213,12 @@ impl RStarTree {
         } else if let Some(geo) = geometry_eq {
             match self {
                 Self::Any(tree) => Box::new(Box::new(
-                    tree.locate_in_envelope(&geo.envelope())
+                    tree.locate_in_envelope(geo.envelope())
                         .map(|m| (m.id, m.point.clone())),
                 )
                     as Box<dyn Iterator<Item = (u64, Geob)> + 'a>),
                 Self::Point(tree) => {
-                    Box::new(tree.locate_in_envelope(&geo.envelope()).map(move |m| {
+                    Box::new(tree.locate_in_envelope(geo.envelope()).map(move |m| {
                         (
                             m.id,
                             Geob::new_point(srid, m.point.x(), m.point.y()).unwrap(),

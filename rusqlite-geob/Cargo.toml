@@ -15,8 +15,8 @@ rusqlite = { workspace = true, features = ["functions", "vtab"] }
 geo-traits = { workspace = true }
 geo = { workspace = true }
 
-udled = { version = "0.6" }
-udled-tokenizers = { version = "0.5" }
+udled = { workspace = true }
+udled-tokenizers = { workspace = true }
 
 rstar = { workspace = true, optional = true }
 
