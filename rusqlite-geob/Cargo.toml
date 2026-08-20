@@ -10,14 +10,14 @@ index = ["rstar"]
 
 [dependencies]
 geob = { path = "../geob", features = ["geo-traits", "sqlite", "rstar"] }
-rusqlite = { version = "0.37", features = ["functions", "vtab"] }
+rusqlite = { workspace = true, features = ["functions", "vtab"] }
 
-geo-traits = { version = "0.3" }
-geo = { version = "0.32" }
+geo-traits = { workspace = true }
+geo = { workspace = true }
 
 udled = { version = "0.6" }
 udled-tokenizers = { version = "0.5" }
 
-rstar = { version = "0.12", optional = true }
+rstar = { workspace = true, optional = true }
 
 bitflags = { version = "2" }
