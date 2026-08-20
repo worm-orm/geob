@@ -209,9 +209,9 @@ unsafe impl<'vtab> VTab<'vtab> for SpartialIndex {
                     IndexConstraintOp::SQLITE_INDEX_CONSTRAINT_LT => {
                         (1, QueryPlanFlags::DISTANCE_LT)
                     }
-                    // IndexConstraintOp::SQLITE_INDEX_CONSTRAINT_GT => {
-                    //     (1, QueryPlanFlags::DISTANCE_GT)
-                    // }
+                    IndexConstraintOp::SQLITE_INDEX_CONSTRAINT_GT => {
+                        (2, QueryPlanFlags::DISTANCE_GT)
+                    }
                     // IndexConstraintOp::SQLITE_INDEX_CONSTRAINT_LE => {
                     //     (2, QueryPlanFlags::DISTANCE_LTE)
                     // }
@@ -231,11 +231,11 @@ unsafe impl<'vtab> VTab<'vtab> for SpartialIndex {
             } else if c.column() == GEO_IDX {
                 let i_mast = match c.operator() {
                     IndexConstraintOp::SQLITE_INDEX_CONSTRAINT_EQ => {
-                        (2, QueryPlanFlags::GEOMETRY_EQ)
+                        (3, QueryPlanFlags::GEOMETRY_EQ)
                     }
 
                     IndexConstraintOp::SQLITE_INDEX_CONSTRAINT_MATCH => {
-                        (3, QueryPlanFlags::GEMETRY_IN)
+                        (4, QueryPlanFlags::GEMETRY_IN)
                     }
 
                     // IndexConstraintOp::SQLITE_INDEX_CONSTRAINT_GT => {
@@ -264,7 +264,10 @@ unsafe impl<'vtab> VTab<'vtab> for SpartialIndex {
                     IndexConstraintOp::SQLITE_INDEX_CONSTRAINT_EQ => (4, QueryPlanFlags::ID_EQ),
 
                     _ => {
-                        panic!("Unsupported constraint")
+                        return Err(Error::ModuleError(format!(
+                            "Unsupported constraint for id column: {:?}",
+                            c.operator()
+                        )));
                     }
                 };
 
@@ -272,7 +275,10 @@ unsafe impl<'vtab> VTab<'vtab> for SpartialIndex {
 
                 i_mast
             } else {
-                todo!()
+                return Err(Error::ModuleError(format!(
+                    "Unsupported constraint for column: {}",
+                    c.column()
+                )));
             };
 
             if !c.is_usable() {

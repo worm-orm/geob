@@ -53,6 +53,11 @@ unsafe impl<'vtab> VTabCursor for SpartialIndexCursor<'vtab> {
             i += 1;
         }
 
+        if idx_num.contains(QueryPlanFlags::DISTANCE_GT) {
+            query.distance_gt = Some(args.get(i)?);
+            i += 1;
+        }
+
         if idx_num.contains(QueryPlanFlags::GEOMETRY_EQ) {
             query.geometry_eq = Some(args.get(i)?);
             i += 1;
@@ -62,7 +67,7 @@ unsafe impl<'vtab> VTabCursor for SpartialIndexCursor<'vtab> {
             query.geometry_match = Some(args.get(i)?);
             i += 1;
         }
-
+        #[allow(unused)]
         if idx_num.contains(QueryPlanFlags::ID_EQ) {
             query.id_eq = Some(args.get(i)?);
             i += 1;

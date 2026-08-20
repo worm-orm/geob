@@ -1,4 +1,5 @@
 use geo::{Distance, Haversine};
+use geo_traits::to_geo::ToGeoPoint;
 use geob::{Geob, SRID, rstar::RStarPoint, types::GeometryRef};
 use rstar::{RTreeObject, SelectionFunction};
 use rusqlite::Error;
@@ -77,6 +78,7 @@ pub enum RStarTree {
 pub struct Query {
     pub distance_eq: Option<f64>,
     pub distance_lt: Option<f64>,
+    pub distance_gt: Option<f64>,
     pub geometry_eq: Option<Geob>,
     pub geometry_match: Option<Geob>,
     pub id_eq: Option<u64>,
@@ -168,6 +170,7 @@ impl RStarTree {
     ) -> rusqlite::Result<Box<dyn Iterator<Item = (u64, Geob)> + 'a>> {
         let Query {
             distance_lt,
+            distance_gt,
             geometry_eq,
             geometry_match,
             id_eq,
@@ -185,6 +188,34 @@ impl RStarTree {
                             Geob::new_point(srid, m.point.x(), m.point.y()).unwrap(),
                         )
                     });
+
+                    Box::new(iter) as Box<dyn Iterator<Item = (u64, Geob)> + 'a>
+                }
+                _ => {
+                    return Err(rusqlite::Error::ModuleError(
+                        "Index require as Point type".to_string(),
+                    ));
+                }
+            }
+        } else if let Some(distance) = distance_gt {
+            let geo = geometry_eq.unwrap();
+            match (self, geo.geometry()) {
+                (Self::Point(tree), GeometryRef::Point(inner_point)) => {
+                    let inner_point = inner_point.to_point();
+
+                    let iter = tree
+                        .iter()
+                        .filter(move |m| {
+                            let local_point = geo::Point::new(m.point.x(), m.point.y());
+                            let local_distance = Haversine.distance(local_point, inner_point);
+                            distance < local_distance
+                        })
+                        .map(move |m| {
+                            (
+                                m.id,
+                                Geob::new_point(srid, m.point.x(), m.point.y()).unwrap(),
+                            )
+                        });
 
                     Box::new(iter) as Box<dyn Iterator<Item = (u64, Geob)> + 'a>
                 }
