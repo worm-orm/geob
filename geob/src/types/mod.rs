@@ -57,6 +57,10 @@ impl<'a> GeobRef<'a> {
     pub fn is(&self, ty: GeoType) -> bool {
         self.geometry().is(ty)
     }
+
+    pub fn ty(&self) -> GeoType {
+        self.geometry().ty()
+    }
 }
 
 impl<'a> GeobRef<'a> {

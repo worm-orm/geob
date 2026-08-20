@@ -39,6 +39,18 @@ impl<'a> GeometryRef<'a> {
             _ => false,
         }
     }
+
+    pub fn ty(&self) -> GeoType {
+        match self {
+            GeometryRef::Point(_) => GeoType::Point,
+            GeometryRef::LineString(_) => GeoType::LineString,
+            GeometryRef::MultiPoint(_) => GeoType::MultiPoint,
+            GeometryRef::MultiLineString(_) => GeoType::MultiLineString,
+            GeometryRef::Polygon(_) => GeoType::Polygon,
+            GeometryRef::MultiPolygon(_) => GeoType::MultiPolygon,
+            GeometryRef::Collection(_) => GeoType::Collection,
+        }
+    }
 }
 
 impl<'a> FromBytes<'a, &'a [u8]> for GeometryRef<'a> {
