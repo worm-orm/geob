@@ -15,6 +15,10 @@ impl<'a> MultiPolygonRef<'a> {
     pub fn get(&self, idx: usize) -> Option<MultiCoordSeqRef<'a>> {
         self.0.get(idx)
     }
+
+    pub fn iter(&self) -> impl Iterator<Item = MultiCoordSeqRef<'a>> + '_ {
+        self.0.iter()
+    }
 }
 
 impl<'a> fmt::Debug for MultiPolygonRef<'a> {

@@ -48,6 +48,11 @@ impl<'a> CollectionRef<'a> {
             None
         }
     }
+
+    pub fn iter(&self) -> impl Iterator<Item = GeometryRef<'a>> + '_ {
+        let len = self.len();
+        (0..len).filter_map(move |i| self.get(i))
+    }
 }
 
 impl<'a> fmt::Debug for CollectionRef<'a> {

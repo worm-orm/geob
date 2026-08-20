@@ -3,7 +3,7 @@ use udled::bytes::{Endian, FromBytes, FromBytesExt};
 
 use crate::{
     GeoType,
-    types::coords::CoordRef,
+    types::coords::{Coord, CoordRef},
     util::{get_endian, read_f64, write_f64},
     writer::ToBytes,
 };

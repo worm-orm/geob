@@ -23,15 +23,15 @@ use crate::{
 
 pub use self::{
     collection::CollectionRef,
-    coords::CoordRef,
-    coords::{CoordSeqRef, MultiCoordSeqRef},
+    coords::{Coord, CoordRef},
+    coords::{CoordSeq, CoordSeqRef, MultiCoordSeq, MultiCoordSeqRef},
     geometry::GeometryRef,
     line_string::LineStringRef,
     muli_line_string::*,
     multi_point::*,
     multi_polygon::MultiPolygonRef,
     point::{Point, PointRef},
-    polygon::PolygonRef,
+    polygon::{Polygon, PolygonRef},
     types::*,
 };
 

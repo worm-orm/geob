@@ -4,6 +4,8 @@ extern crate alloc;
 
 // mod binary;
 mod geob;
+mod methods;
+mod rect;
 #[cfg(feature = "sqlite")]
 mod sqlite;
 pub mod srid;

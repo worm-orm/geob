@@ -1,11 +1,44 @@
 use core::fmt;
 
+use alloc::vec::Vec;
 use udled::{
     AsSlice, Input, TokenizerExt,
     bytes::{Endian, FromBytes, FromBytesExt},
 };
 
-use crate::util::{read_f64, read_u32};
+use crate::{
+    Geob,
+    util::{read_f64, read_u32},
+};
+
+#[derive(Clone, Copy, PartialEq, PartialOrd, Debug)]
+pub struct Coord {
+    x: f64,
+    y: f64,
+}
+
+impl Coord {
+    pub fn new(x: f64, y: f64) -> Self {
+        Self { x, y }
+    }
+
+    pub fn x(&self) -> f64 {
+        self.x
+    }
+
+    pub fn y(&self) -> f64 {
+        self.y
+    }
+}
+
+impl From<CoordRef<'_>> for Coord {
+    fn from(value: CoordRef<'_>) -> Self {
+        Self {
+            x: value.x(),
+            y: value.y(),
+        }
+    }
+}
 
 #[derive(Clone, Copy)]
 pub struct CoordRef<'a> {
@@ -50,6 +83,29 @@ impl<'input> FromBytes<'input, &'input [u8]> for CoordRef<'input> {
             data: x.value,
             endian,
         })
+    }
+}
+
+#[derive(Clone, PartialEq, PartialOrd, Debug)]
+pub struct CoordSeq {
+    points: Vec<Coord>,
+}
+
+impl CoordSeq {
+    pub fn new(points: Vec<Coord>) -> Self {
+        Self { points }
+    }
+
+    pub fn len(&self) -> usize {
+        self.points.len()
+    }
+
+    pub fn get(&self, idx: usize) -> Option<&Coord> {
+        self.points.get(idx)
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &Coord> {
+        self.points.iter()
     }
 }
 
@@ -152,6 +208,45 @@ impl<'a> Iterator for CoordSeqIter<'a> {
         self.idx += 1;
 
         next
+    }
+}
+
+#[derive(Clone, PartialEq, PartialOrd, Debug)]
+pub struct MultiCoordSeq {
+    segments: Vec<CoordSeq>,
+}
+
+impl MultiCoordSeq {
+    pub fn new(segments: Vec<CoordSeq>) -> Self {
+        Self { segments }
+    }
+
+    pub fn len(&self) -> usize {
+        self.segments.len()
+    }
+
+    pub fn get(&self, idx: usize) -> Option<&CoordSeq> {
+        self.segments.get(idx)
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &CoordSeq> {
+        self.segments.iter()
+    }
+}
+
+impl From<MultiCoordSeqRef<'_>> for MultiCoordSeq {
+    fn from(value: MultiCoordSeqRef<'_>) -> Self {
+        let mut segments = Vec::with_capacity(value.len());
+
+        for i in 0..value.len() {
+            if let Some(segment) = value.get(i) {
+                segments.push(CoordSeq {
+                    points: segment.iter().map(|c| c.into()).collect(),
+                });
+            }
+        }
+
+        Self { segments }
     }
 }
 

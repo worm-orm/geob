@@ -1,6 +1,29 @@
-use crate::types::coords::{CoordSeqRef, MultiCoordSeqRef};
+use crate::types::coords::{CoordSeqRef, MultiCoordSeq, MultiCoordSeqRef};
 use alloc::fmt;
 use udled::bytes::{FromBytes, FromBytesExt};
+
+#[derive(Clone, PartialEq, PartialOrd, Debug)]
+pub struct Polygon(MultiCoordSeq);
+
+impl Polygon {
+    pub fn new(rings: MultiCoordSeq) -> Self {
+        Self(rings)
+    }
+}
+
+impl core::ops::Deref for Polygon {
+    type Target = MultiCoordSeq;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl From<PolygonRef<'_>> for Polygon {
+    fn from(polygon_ref: PolygonRef<'_>) -> Self {
+        Self(MultiCoordSeq::from(polygon_ref.0))
+    }
+}
 
 #[derive(Clone, Copy, PartialEq)]
 #[repr(transparent)]
@@ -21,6 +44,10 @@ impl<'a> PolygonRef<'a> {
 
     pub fn interior(&self, idx: usize) -> Option<CoordSeqRef<'a>> {
         self.0.get(1 + idx)
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = CoordSeqRef<'a>> + '_ {
+        self.0.iter()
     }
 }
 
